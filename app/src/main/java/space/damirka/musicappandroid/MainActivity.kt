@@ -1,8 +1,5 @@
 package space.damirka.musicappandroid
 
-//import androidx.compose.material3.MaterialTheme
-//import androidx.compose.material3.TabRow
-//import androidx.compose.material3.TabRowDefaults
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,12 +7,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.Composable
@@ -30,6 +27,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.launch
 import space.damirka.musicappandroid.ui.theme.MusicAppAndroidTheme
+import space.damirka.musicappandroid.views.HomeView
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +39,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Android")
+                    TabView()
                 }
             }
         }
@@ -74,7 +72,7 @@ fun TabScreen(
 val tabRowItems = listOf(
     TabRowItem(
         title = "Tab 1",
-        screen = { TabScreen(text = "Tab 1") },
+        screen = { HomeView() },
         icon = Icons.Outlined.Home,
         iconSel = Icons.Rounded.Home
     ),
@@ -94,7 +92,7 @@ val tabRowItems = listOf(
 
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun Greeting(name: String) {
+fun TabView() {
     val pagerState = rememberPagerState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -105,7 +103,6 @@ fun Greeting(name: String) {
                 indicator = { tabPositions ->
                     TabRowDefaults.Indicator(
                         Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
-//                        color = MaterialTheme.colorScheme.secondary,
                         color = MaterialTheme.colorScheme.background
                     )
                 },
@@ -129,15 +126,11 @@ fun Greeting(name: String) {
             }
         }
     ) { innerPadding ->
-//        Text(
-//            modifier = Modifier.padding(innerPadding),
-//            text = "Example of a scaffold with a bottom app bar."
-//        )
-
         HorizontalPager(
             modifier = Modifier.padding(innerPadding),
             count = tabRowItems.size,
             state = pagerState,
+            userScrollEnabled = false
         ) {
             tabRowItems[pagerState.currentPage].screen()
         }
@@ -152,7 +145,7 @@ fun DefaultPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            Greeting("Android")
+            TabView()
         }
     }
 }
