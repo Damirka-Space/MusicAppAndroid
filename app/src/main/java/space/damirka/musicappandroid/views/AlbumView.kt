@@ -1,6 +1,7 @@
 package space.damirka.musicappandroid.views
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -16,15 +17,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import space.damirka.musicappandroid.R
 import space.damirka.musicappandroid.entities.TrackEntity
 import space.damirka.musicappandroid.factories.AlbumViewFactory
 import space.damirka.musicappandroid.factories.TrackViewFactory
+import space.damirka.musicappandroid.services.PlayerService
+import space.damirka.musicappandroid.services.ServiceLocator
 import space.damirka.musicappandroid.viewmodels.AlbumViewModel
 import space.damirka.musicappandroid.viewmodels.TrackViewModel
 
@@ -37,7 +44,9 @@ fun AlbumView(
     albumViewModel: AlbumViewModel =
         viewModel(factory = AlbumViewFactory(id)),
     trackViewModel: TrackViewModel =
-        viewModel(factory = TrackViewFactory(id))
+        viewModel(factory = TrackViewFactory(id)),
+
+    playerService: PlayerService = PlayerService.getInstance()!!
 ) {
     albumViewModel.data?.let {
         val album = it
@@ -156,17 +165,37 @@ fun AlbumView(
                                                 }
                                         )
                                     }
-                                    IconButton(onClick = {}) {
-                                        Icon(imageVector = Icons.Filled.PlayArrow,
-                                            contentDescription = null,
-                                            modifier = Modifier
-                                                .drawBehind {
-                                                    drawCircle(
-                                                        color = Color.LightGray,
-                                                        radius = this.size.maxDimension
-                                                    )
-                                                }
-                                        )
+                                    IconButton(onClick = {
+                                        if(playerService.isPlaying() && playerService.currentAlbum() == album.id)
+                                            playerService.pause()
+                                        else if (playerService.currentAlbum() == album.id)
+                                            playerService.play()
+                                        else
+                                            playerService.playAlbum(album.id, tracks)
+                                    }) {
+                                        if(playerService.isPlaying() && playerService.currentAlbum() == album.id) {
+                                            Icon(painter = painterResource(R.drawable.baseline_pause_24),
+                                                contentDescription = null,
+                                                modifier = Modifier
+                                                    .drawBehind {
+                                                        drawCircle(
+                                                            color = Color.LightGray,
+                                                            radius = this.size.maxDimension
+                                                        )
+                                                    }
+                                            )
+                                        } else {
+                                            Icon(painter = painterResource(R.drawable.baseline_play_arrow_24),
+                                                contentDescription = null,
+                                                modifier = Modifier
+                                                    .drawBehind {
+                                                        drawCircle(
+                                                            color = Color.LightGray,
+                                                            radius = this.size.maxDimension
+                                                        )
+                                                    }
+                                            )
+                                        }
                                     }
                                     IconButton(onClick = {}) {
                                         Icon(imageVector = Icons.Outlined.MoreVert,
@@ -190,7 +219,7 @@ fun AlbumView(
                     Box (
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(10.dp)
+                            .height(2.dp)
                             .background(
                                 color = Color.White
                             )
@@ -198,14 +227,17 @@ fun AlbumView(
                 }
 
                 itemsIndexed(tracks) { index, item ->
-                    TrackView(index = index + 1, trackEntity = item)
+                    TrackView(albumId = album.id, index = index + 1, track = item, onClick = {
+                        playerService.setAlbum(album.id, tracks)
+                        playerService.playAt(index)
+                    })
                 }
 
                 item {
                     Box (
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(10.dp)
+                            .height(2.dp)
                             .background(
                                 color = Color.White
                             )
@@ -228,15 +260,32 @@ fun AlbumView(
 }
 
 @Composable
-fun TrackView(index: Int,
-              trackEntity: TrackEntity) {
-    Box (
+fun TrackView(
+    albumId: Int,
+    index: Int,
+    track: TrackEntity,
+    onClick: (Offset) -> Unit,
+    playerService: PlayerService = PlayerService.getInstance()!!) {
+
+    var color = Color.White
+
+    if (playerService.currentAlbum() == albumId && playerService.currentIndex() + 1 == index) {
+        color = Color.LightGray
+    }
+
+    Row (
         modifier = Modifier
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = onClick
+                )
+            }
             .fillMaxWidth()
             .height(55.dp)
             .background(
-                color = Color.White
-            )
+                color = color
+            ),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Row (
             modifier = Modifier.padding(20.dp, 0.dp, 0.dp, 0.dp),
@@ -249,12 +298,12 @@ fun TrackView(index: Int,
                 style = MaterialTheme.typography.bodyMedium
             )
             Column {
-                Text(trackEntity.title,
+                Text(track.title,
                     color = Color.Black,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(trackEntity.author.joinToString(", "),
+                Text(track.author.joinToString(", "),
                     color = Color.Black,
                     modifier = Modifier.alpha(.8f),
                     maxLines = 1,
