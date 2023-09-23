@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.*
@@ -31,7 +30,6 @@ import space.damirka.musicappandroid.entities.TrackEntity
 import space.damirka.musicappandroid.factories.AlbumViewFactory
 import space.damirka.musicappandroid.factories.TrackViewFactory
 import space.damirka.musicappandroid.services.PlayerService
-import space.damirka.musicappandroid.services.ServiceLocator
 import space.damirka.musicappandroid.viewmodels.AlbumViewModel
 import space.damirka.musicappandroid.viewmodels.TrackViewModel
 
@@ -301,13 +299,14 @@ fun TrackView(
                 Text(track.title,
                     color = Color.Black,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium)
                 Text(track.author.joinToString(", "),
                     color = Color.Black,
                     modifier = Modifier.alpha(.8f),
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis)
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodySmall)
             }
         }
     }

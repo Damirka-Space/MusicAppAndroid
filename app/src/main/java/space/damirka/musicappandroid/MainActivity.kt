@@ -1,5 +1,6 @@
 package space.damirka.musicappandroid
 
+import android.content.ComponentName
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -22,16 +23,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.common.util.concurrent.MoreExecutors
+import space.damirka.musicappandroid.services.MediaPlaybackService
+import space.damirka.musicappandroid.services.PlayerService
 import space.damirka.musicappandroid.ui.theme.MusicAppAndroidTheme
 import space.damirka.musicappandroid.views.HomeView
 
 class MainActivity : ComponentActivity() {
+    override fun onStart() {
+        super.onStart()
+
+        val sessionToken = SessionToken(this, ComponentName(this, MediaPlaybackService::class.java))
+        val controllerFuture = MediaController.Builder(this, sessionToken).buildAsync()
+        controllerFuture.addListener({
+            PlayerService.getInstance()?.setPlayer(controllerFuture.get())
+        },
+            MoreExecutors.directExecutor()
+        )
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {

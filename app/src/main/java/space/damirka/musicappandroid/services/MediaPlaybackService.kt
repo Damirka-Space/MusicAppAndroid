@@ -1,46 +1,33 @@
 package space.damirka.musicappandroid.services
 
-import android.media.browse.MediaBrowser
-import android.os.Bundle
-import android.service.media.MediaBrowserService
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.DefaultMediaNotificationProvider
+import androidx.media3.session.MediaSession
+import androidx.media3.session.MediaSessionService
 
-class MediaPlaybackService : MediaBrowserService() {
+class MediaPlaybackService : MediaSessionService() {
+    private var mediaSession: MediaSession? = null
+    private var playerService : PlayerService = PlayerService.getInstance()!!
 
-//    private var mediaSession: MediaSessionCompat? = null
-//    private lateinit var stateBuilder: PlaybackStateCompat.Builder
-//
-//    override fun onCreate() {
-//        super.onCreate()
-//
-//        // Create a MediaSessionCompat
-//        mediaSession = MediaSessionCompat(baseContext, LOG_TAG).apply {
-//
-//            // Enable callbacks from MediaButtons and TransportControls
-//            setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS
-//                    or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
-//            )
-//
-//            // Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player
-//            stateBuilder = PlaybackStateCompat.Builder()
-//                .setActions(PlaybackStateCompat.ACTION_PLAY
-//                        or PlaybackStateCompat.ACTION_PLAY_PAUSE
-//                )
-//            setPlaybackState(stateBuilder.build())
-//
-//            // MySessionCallback() has methods that handle callbacks from a media controller
-//            setCallback(MySessionCallback())
-//
-//            // Set the session's token so that client activities can communicate with it.
-//            setSessionToken(sessionToken)
-//        }
-//    }
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+    override fun onCreate() {
+        super.onCreate()
+        val player = ExoPlayer.Builder(this).build()
+        mediaSession = MediaSession.Builder(this, player).build()
 
-    override fun onGetRoot(p0: String, p1: Int, p2: Bundle?): BrowserRoot? {
-        TODO("Not yet implemented")
+        setMediaNotificationProvider(DefaultMediaNotificationProvider.Builder(this).build())
     }
 
-    override fun onLoadChildren(p0: String, p1: Result<MutableList<MediaBrowser.MediaItem>>) {
-        TODO("Not yet implemented")
+    override fun onDestroy() {
+        mediaSession?.run {
+            player.release()
+            release()
+            mediaSession = null
+        }
+        super.onDestroy()
     }
 
+    override fun onGetSession(
+        controllerInfo: MediaSession.ControllerInfo
+    ): MediaSession? = mediaSession
 }

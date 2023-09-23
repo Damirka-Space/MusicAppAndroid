@@ -27,7 +27,7 @@ fun CardView(
     Box(
         modifier = Modifier
             .width(Dp(150f))
-            .height(Dp(190f))
+            .height(Dp(195f))
             .background(
                 color = Color.LightGray,
                 shape = RoundedCornerShape(10.dp)
