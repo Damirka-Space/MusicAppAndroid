@@ -84,6 +84,14 @@ fun HomeAlbums(
                     }
                 }
             }
+
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                )
+            }
         }
     }
 }
