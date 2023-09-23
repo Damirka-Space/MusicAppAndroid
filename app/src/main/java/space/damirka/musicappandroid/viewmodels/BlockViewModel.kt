@@ -23,8 +23,6 @@ class BlockViewModel: ViewModel(){
             val blocks = gson.fromJson(response, BlocksEntity::class.java)
 
             data = blocks.blocks
-
-            println(data[0].albums[0].image.url)
         }
     }
 

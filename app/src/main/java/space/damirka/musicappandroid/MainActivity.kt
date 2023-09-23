@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
@@ -14,18 +16,18 @@ import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.rememberPagerState
-import kotlinx.coroutines.launch
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import space.damirka.musicappandroid.ui.theme.MusicAppAndroidTheme
 import space.damirka.musicappandroid.views.HomeView
 
@@ -50,6 +52,7 @@ data class TabRowItem(
     val title: String,
     val icon: ImageVector,
     val iconSel: ImageVector,
+    val route: String,
     val screen: @Composable () -> Unit,
 )
 
@@ -69,70 +72,77 @@ fun TabScreen(
     }
 }
 
-val tabRowItems = listOf(
+val items = listOf(
     TabRowItem(
-        title = "Tab 1",
+        title = "Home",
         screen = { HomeView() },
         icon = Icons.Outlined.Home,
-        iconSel = Icons.Rounded.Home
+        iconSel = Icons.Rounded.Home,
+        route = "Home"
     ),
     TabRowItem(
-        title = "Tab 2",
+        title = "Search",
         screen = { TabScreen(text = "Tab 2") },
         icon = Icons.Outlined.Search,
-        iconSel = Icons.Rounded.Search
+        iconSel = Icons.Rounded.Search,
+        route = "Search"
     ),
     TabRowItem(
-        title = "Tab 3",
+        title = "Favorite",
         screen = { TabScreen(text = "Tab 3") },
         icon = Icons.Outlined.FavoriteBorder,
-        iconSel = Icons.Rounded.Favorite
+        iconSel = Icons.Rounded.Favorite,
+        route = "Favorite"
     )
 )
 
-@OptIn(ExperimentalPagerApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TabView() {
-    val pagerState = rememberPagerState()
-    val coroutineScope = rememberCoroutineScope()
+    val navController = rememberNavController()
 
     Scaffold(
         bottomBar = {
-            TabRow(
-                selectedTabIndex = pagerState.currentPage,
-                indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
-                        color = MaterialTheme.colorScheme.background
-                    )
-                },
-                containerColor = MaterialTheme.colorScheme.background
+            BottomNavigation (
+                backgroundColor = MaterialTheme.colorScheme.background,
             ) {
-                tabRowItems.forEachIndexed { index, item ->
-                    Tab(
-                        selected = pagerState.currentPage == index,
-                        selectedContentColor = Color.Black,
-                        unselectedContentColor = MaterialTheme.colorScheme.secondary,
-                        onClick = { coroutineScope.launch { pagerState.animateScrollToPage(index) } },
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentDestination = navBackStackEntry?.destination
+                items.forEach { screen ->
+                    BottomNavigationItem(
                         icon = {
-                            if(pagerState.currentPage == index) {
-                                Icon(imageVector = item.iconSel, contentDescription = item.title)
+                            if(currentDestination?.hierarchy?.any { it.route == screen.route } == true) {
+                                Icon(imageVector = screen.iconSel, contentDescription = screen.title)
                             } else {
-                                Icon(imageVector = item.icon, contentDescription = item.title)
+                                Icon(imageVector = screen.icon, contentDescription = screen.title)
                             }
                         },
+//                        label = { Text(screen.title) },
+                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                        onClick = {
+                            navController.navigate(screen.route) {
+                                // Pop up to the start destination of the graph to
+                                // avoid building up a large stack of destinations
+                                // on the back stack as users select items
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                // Avoid multiple copies of the same destination when
+                                // reselecting the same item
+                                launchSingleTop = true
+                                // Restore state when reselecting a previously selected item
+                                restoreState = true
+                            }
+                        }
                     )
                 }
             }
         }
     ) { innerPadding ->
-        HorizontalPager(
-            modifier = Modifier.padding(innerPadding),
-            count = tabRowItems.size,
-            state = pagerState,
-            userScrollEnabled = false
-        ) {
-            tabRowItems[pagerState.currentPage].screen()
+        NavHost(navController, startDestination = items[0].route, Modifier.padding(innerPadding)) {
+            items.forEach { item ->
+                composable(item.route) { item.screen() }
+            }
         }
     }
 }
