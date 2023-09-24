@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -58,6 +59,14 @@ class PlayerService {
 
     fun shuffle(value: Boolean) {
         this.shuffle = value
+    }
+
+    fun duration(): Long? {
+        return mediaController?.duration
+    }
+
+    fun position(): Long? {
+        return mediaController?.currentPosition
     }
 
     fun playAlbum(albumId: Int, album: List<TrackEntity>) {

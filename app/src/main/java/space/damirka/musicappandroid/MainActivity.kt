@@ -44,6 +44,7 @@ import space.damirka.musicappandroid.views.HomeView
 import space.damirka.musicappandroid.views.PlayerView
 
 class MainActivity : ComponentActivity() {
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     override fun onStart() {
         super.onStart()
 
