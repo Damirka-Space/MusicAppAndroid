@@ -1,14 +1,15 @@
 package space.damirka.musicappandroid
 
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
@@ -21,8 +22,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -36,6 +41,7 @@ import space.damirka.musicappandroid.services.MediaPlaybackService
 import space.damirka.musicappandroid.services.PlayerService
 import space.damirka.musicappandroid.ui.theme.MusicAppAndroidTheme
 import space.damirka.musicappandroid.views.HomeView
+import space.damirka.musicappandroid.views.PlayerView
 
 class MainActivity : ComponentActivity() {
     override fun onStart() {
@@ -115,7 +121,9 @@ val items = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TabView() {
+fun TabView(
+    playerService: PlayerService = PlayerService.getInstance()!!
+) {
     val navController = rememberNavController()
 
     Scaffold(
@@ -156,9 +164,26 @@ fun TabView() {
             }
         }
     ) { innerPadding ->
-        NavHost(navController, startDestination = items[0].route, Modifier.padding(innerPadding)) {
-            items.forEach { item ->
-                composable(item.route) { item.screen() }
+        Box(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+        ) {
+            NavHost(navController, startDestination = items[0].route) {
+                items.forEach { item ->
+                    composable(item.route) { item.screen() }
+                }
+            }
+
+            if(playerService.showPlayerView()) {
+                Surface(modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(50.dp),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    PlayerView()
+                }
             }
         }
     }
